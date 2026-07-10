@@ -7,21 +7,35 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import okhttp3.Cookie
+import okhttp3.CookieJar
+import okhttp3.HttpUrl
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class KtorClientFactory @Inject constructor() {
 
-    @Volatile
-    var authToken: String? = null
+    private val cookieStore = mutableMapOf<String, List<Cookie>>()
 
     fun create(): HttpClient {
         return HttpClient(OkHttp) {
+            engine {
+                config {
+                    cookieJar(object : CookieJar {
+                        override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
+                            cookieStore[url.host] = cookies
+                        }
+
+                        override fun loadForRequest(url: HttpUrl): List<Cookie> {
+                            return cookieStore[url.host] ?: emptyList()
+                        }
+                    })
+                }
+            }
+
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true
@@ -41,10 +55,6 @@ class KtorClientFactory @Inject constructor() {
 
             defaultRequest {
                 url("https://inventory-project-ten.vercel.app/api/")
-                val token = authToken
-                if (token != null) {
-                    header(HttpHeaders.Authorization, "Bearer $token")
-                }
             }
         }
     }
