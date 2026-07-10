@@ -23,3 +23,6 @@ app/release/
 
 # Firebase (replace with your real google-services.json from Firebase Console)
 # google-services.json is committed with placeholder - replace with real one
+*.json:Zone.Identifier
+# Firebase Admin SDK credentials
+inventory-app-android-firebase-adminsdk-fbsvc-*.json

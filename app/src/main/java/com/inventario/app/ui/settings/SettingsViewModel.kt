@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,25 +47,39 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadSettings() {
         viewModelScope.launch {
-            combine(
-                settingsDataStore.isDarkMode,
-                settingsDataStore.useDynamicColor,
-                workspaceDataStore.wsNombre,
-                workspaceDataStore.orgNombre,
-                authDataStore.userName,
-                authDataStore.userEmail,
-                authDataStore.userRol
-            ) { darkMode, dynamicColor, ws, org, name, email, rol ->
-                SettingsUiState(
-                    userName = name ?: "",
-                    userEmail = email ?: "",
-                    userRol = rol ?: "",
-                    currentWs = ws,
-                    currentOrg = org,
-                    darkModeEnabled = darkMode,
-                    useDynamicColor = dynamicColor
-                )
-            }.collect { _uiState.value = it }
+            settingsDataStore.isDarkMode.collect { value ->
+                _uiState.update { it.copy(darkModeEnabled = value) }
+            }
+        }
+        viewModelScope.launch {
+            settingsDataStore.useDynamicColor.collect { value ->
+                _uiState.update { it.copy(useDynamicColor = value) }
+            }
+        }
+        viewModelScope.launch {
+            workspaceDataStore.wsNombre.collect { value ->
+                _uiState.update { it.copy(currentWs = value) }
+            }
+        }
+        viewModelScope.launch {
+            workspaceDataStore.orgNombre.collect { value ->
+                _uiState.update { it.copy(currentOrg = value) }
+            }
+        }
+        viewModelScope.launch {
+            authDataStore.userName.collect { value ->
+                _uiState.update { it.copy(userName = value ?: "") }
+            }
+        }
+        viewModelScope.launch {
+            authDataStore.userEmail.collect { value ->
+                _uiState.update { it.copy(userEmail = value ?: "") }
+            }
+        }
+        viewModelScope.launch {
+            authDataStore.userRol.collect { value ->
+                _uiState.update { it.copy(userRol = value ?: "") }
+            }
         }
     }
 

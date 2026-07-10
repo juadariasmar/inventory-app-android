@@ -92,6 +92,7 @@ class VentaRepositoryImpl @Inject constructor(
         val wsSlug = workspaceDataStore.wsSlug.first()
 
         ventaApi.cancelarVenta(token, orgSlug, wsSlug, id, CancelarVentaRequest(motivo))
+        Unit
     }.recoverCatching { throwable ->
         when (throwable) {
             is DomainError -> throw throwable

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.inventario.app.domain.model.Cliente
 import com.inventario.app.domain.model.Producto
 import com.inventario.app.domain.usecase.cliente.GetClientesUseCase
-import com.inventario.app.domain.usecase.producto.GetProductosUseCase
+import com.inventario.app.domain.usecase.producto.GetProductosListUseCase
 import com.inventario.app.domain.usecase.venta.CreateVentaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class VentaFormViewModel @Inject constructor(
     private val getClientes: GetClientesUseCase,
-    private val getProductos: GetProductosUseCase,
+    private val getProductos: GetProductosListUseCase,
     private val createVenta: CreateVentaUseCase
 ) : ViewModel() {
 
@@ -65,7 +65,7 @@ class VentaFormViewModel @Inject constructor(
                 notas = _uiState.value.notas.ifBlank { null }
             )
                 .onSuccess { _navigationEvent.emit(true) }
-                .onFailure { _uiState.update { it.copy(isLoading = false, error = it.message) } }
+                .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
 

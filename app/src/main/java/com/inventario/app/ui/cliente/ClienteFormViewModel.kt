@@ -61,7 +61,7 @@ class ClienteFormViewModel @Inject constructor(
                 )
             )
                 .onSuccess { _navigationEvent.emit(true) }
-                .onFailure { _uiState.update { it.copy(isLoading = false, error = it.message) } }
+                .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
 

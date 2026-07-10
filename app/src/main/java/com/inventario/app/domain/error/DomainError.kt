@@ -1,6 +1,6 @@
 package com.inventario.app.domain.error
 
-sealed class DomainError(val message: String) {
+sealed class DomainError(message: String) : Throwable(message) {
     object NetworkError : DomainError("Sin conexion a internet")
     object Unauthorized : DomainError("Sesion expirada")
     object Forbidden : DomainError("No tienes permisos para esta accion")

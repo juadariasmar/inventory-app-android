@@ -1,5 +1,8 @@
 package com.inventario.app.ui.movimiento
 
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,9 +11,30 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -138,6 +162,193 @@ fun MovimientosScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MovimientoFormScreen(
+    onNavigateBack: () -> Unit = {},
+    viewModel: MovimientoFormViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val navEvent by viewModel.navigationEvent.collectAsStateWithLifecycle(initialValue = null)
+    val context = LocalContext.current
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(navEvent) {
+        if (navEvent == true) {
+            Toast.makeText(context, "Movimiento registrado", Toast.LENGTH_SHORT).show()
+            onNavigateBack()
+        }
+    }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text("Descartar cambios") },
+            text = { Text("¿Descartar el movimiento? Los cambios no se guardarán.") },
+            confirmButton = { TextButton(onClick = { onNavigateBack() }) { Text("Descartar") } },
+            dismissButton = { TextButton(onClick = { showExitDialog = false }) { Text("Continuar") } }
+        )
+    }
+
+    BackHandler(enabled = true) {
+        showExitDialog = true
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Registrar Movimiento") },
+                navigationIcon = {
+                    IconButton(onClick = { showExitDialog = true }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            // Tipo selector
+            Text("Tipo:", style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = uiState.tipo == TipoMovimiento.entrada,
+                    onClick = { viewModel.onTipoChanged(TipoMovimiento.entrada) },
+                    label = { Text("↓ ENTRADA") },
+                    modifier = Modifier.weight(1f)
+                )
+                FilterChip(
+                    selected = uiState.tipo == TipoMovimiento.salida,
+                    onClick = { viewModel.onTipoChanged(TipoMovimiento.salida) },
+                    label = { Text("SALIDA ↑") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Producto selector
+            Text("Producto*:", style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(4.dp))
+            androidx.compose.material3.OutlinedTextField(
+                value = uiState.selectedProducto?.let { "${it.nombre} (Stock: ${it.cantidad})" } ?: "",
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                enabled = false,
+                label = { Text("Producto seleccionado") },
+                trailingIcon = {
+                    Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+            )
+            uiState.fieldErrors["producto"]?.let { error ->
+                Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Quick product list
+            LazyColumn(modifier = Modifier.height(150.dp)) {
+                items(uiState.productos.take(20)) { producto ->
+                    val isSelected = uiState.selectedProducto?.id == producto.id
+                    Surface(
+                        onClick = { viewModel.onProductoSelected(producto) },
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).clip(MaterialTheme.shapes.small)
+                    ) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(producto.nombre, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            if (producto.cantidad <= producto.stockMinimo) {
+                                Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                            }
+                            Text("(${producto.cantidad})", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Cantidad
+            OutlinedTextField(
+                value = uiState.cantidad,
+                onValueChange = viewModel::onCantidadChanged,
+                label = { Text("Cantidad*") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = uiState.fieldErrors.containsKey("cantidad"),
+                supportingText = uiState.fieldErrors["cantidad"]?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            // Notas
+            OutlinedTextField(
+                value = uiState.notas,
+                onValueChange = viewModel::onNotasChanged,
+                label = { Text("Notas (opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 2, maxLines = 4
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Stock preview
+            val stockActual = uiState.selectedProducto?.cantidad ?: 0
+            val cantidadInt = uiState.cantidad.toIntOrNull() ?: 0
+            val stockDespues = if (uiState.tipo == TipoMovimiento.entrada) stockActual + cantidadInt
+                               else stockActual - cantidadInt
+            val esValido = stockDespues >= 0 && cantidadInt > 0
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (esValido) SuccessContainer.copy(alpha = 0.3f)
+                                    else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                )
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Stock actual: $stockActual", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Stock después: ${if (cantidadInt > 0) stockDespues else "—"} ${if (esValido) "✅" else "❌"}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // Error
+            uiState.error?.let { error ->
+                ErrorBanner(error = error, onDismiss = viewModel::onDismissError)
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // Register button
+            Button(
+                onClick = viewModel::onRegistrar,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                enabled = !uiState.isLoading && uiState.selectedProducto != null && uiState.cantidad.toIntOrNull() != null
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Registrar")
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 }

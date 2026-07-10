@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -57,9 +58,5 @@ class AuthDataStore @Inject constructor(
 
     suspend fun clearSession() {
         dataStore.edit { it.clear() }
-    }
-
-    private suspend fun <T> DataStore<Preferences>.first(): Preferences {
-        return dataStore.data.first()
     }
 }

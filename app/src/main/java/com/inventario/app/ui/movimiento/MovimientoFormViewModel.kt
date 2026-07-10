@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.inventario.app.domain.model.Producto
 import com.inventario.app.domain.model.TipoMovimiento
 import com.inventario.app.domain.usecase.movimiento.RegistrarMovimientoUseCase
-import com.inventario.app.domain.usecase.producto.GetProductosUseCase
+import com.inventario.app.domain.usecase.producto.GetProductosListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MovimientoFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getProductos: GetProductosUseCase,
+    private val getProductos: GetProductosListUseCase,
     private val registrarMovimiento: RegistrarMovimientoUseCase
 ) : ViewModel() {
 
