@@ -4,11 +4,16 @@ import com.inventario.app.data.remote.dto.DashboardDto
 import com.inventario.app.domain.model.DashboardMetrics
 
 fun DashboardDto.toDomain(): DashboardMetrics {
+    val totalProductos = inventarioGeneral.size
+    val totalUnidades = inventarioGeneral.sumOf { it.cantidad }
+    val stockBajo = inventarioGeneral.count { it.estado == "Stock bajo" || it.estado == "Sin stock" }
+    val valorInventario = inventarioGeneral.sumOf { it.valorEnStock }
+
     return DashboardMetrics(
-        totalProductos = inventarioGeneral?.totalProductos ?: 0,
-        totalUnidades = inventarioGeneral?.totalUnidades ?: 0,
-        stockBajo = inventarioGeneral?.stockBajo ?: 0,
-        valorInventario = inventarioGeneral?.valorInventario ?: 0.0,
+        totalProductos = totalProductos,
+        totalUnidades = totalUnidades,
+        stockBajo = stockBajo,
+        valorInventario = valorInventario,
         ultimosMovimientos = emptyList()
     )
 }
