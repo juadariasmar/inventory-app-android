@@ -11,7 +11,6 @@ import com.inventario.app.data.remote.api.OrganizationApi
 import com.inventario.app.data.remote.api.ProductoApi
 import com.inventario.app.data.remote.api.VentaApi
 import com.inventario.app.data.remote.api.WorkspaceApi
-import com.inventario.app.data.remote.interceptor.AuthInterceptor
 import com.inventario.app.data.repository.AuthRepositoryImpl
 import com.inventario.app.data.repository.CategoriaRepositoryImpl
 import com.inventario.app.data.repository.ClienteRepositoryImpl

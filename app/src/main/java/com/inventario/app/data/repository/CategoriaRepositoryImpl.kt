@@ -1,6 +1,5 @@
 package com.inventario.app.data.repository
 
-import com.inventario.app.data.local.datastore.AuthDataStore
 import com.inventario.app.data.local.datastore.WorkspaceDataStore
 import com.inventario.app.data.local.db.dao.CategoriaDao
 import com.inventario.app.data.mapper.toDomain
@@ -23,13 +22,10 @@ import javax.inject.Singleton
 class CategoriaRepositoryImpl @Inject constructor(
     private val categoriaApi: CategoriaApi,
     private val categoriaDao: CategoriaDao,
-    private val authDataStore: AuthDataStore,
     private val workspaceDataStore: WorkspaceDataStore
 ) : CategoriaRepository {
 
     override fun getCategorias(): Flow<List<Categoria>> = flow {
-        val token = authDataStore.token.first()
-            ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
         val wsId = workspaceDataStore.wsId.first()
@@ -42,7 +38,7 @@ class CategoriaRepositoryImpl @Inject constructor(
         emit(categoriaDao.getAll().first().map { it.toDomain() })
 
         try {
-            val response = categoriaApi.getCategorias(token, orgSlug, wsSlug)
+            val response = categoriaApi.getCategorias(orgSlug, wsSlug)
             val entities = response.map { it.toEntity(wsId) }
             categoriaDao.deleteAll()
             categoriaDao.upsertAll(entities)
@@ -53,7 +49,6 @@ class CategoriaRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createCategoria(categoria: Categoria): Result<Categoria> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
         val wsId = workspaceDataStore.wsId.first()
@@ -63,7 +58,7 @@ class CategoriaRepositoryImpl @Inject constructor(
             prefijo = categoria.prefijo
         )
 
-        val response = categoriaApi.createCategoria(token, orgSlug, wsSlug, request)
+        val response = categoriaApi.createCategoria(orgSlug, wsSlug, request)
         val entity = response.toEntity(wsId)
         categoriaDao.upsertAll(listOf(entity))
         response.toDomain()
@@ -82,7 +77,6 @@ class CategoriaRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateCategoria(id: Int, categoria: Categoria): Result<Categoria> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
         val wsId = workspaceDataStore.wsId.first()
@@ -92,7 +86,7 @@ class CategoriaRepositoryImpl @Inject constructor(
             prefijo = categoria.prefijo
         )
 
-        val response = categoriaApi.updateCategoria(token, orgSlug, wsSlug, id, request)
+        val response = categoriaApi.updateCategoria(orgSlug, wsSlug, id, request)
         val entity = response.toEntity(wsId)
         categoriaDao.upsertAll(listOf(entity))
         response.toDomain()

@@ -1,6 +1,5 @@
 package com.inventario.app.data.repository
 
-import com.inventario.app.data.local.datastore.AuthDataStore
 import com.inventario.app.data.local.datastore.WorkspaceDataStore
 import com.inventario.app.data.local.db.dao.MovimientoDao
 import com.inventario.app.data.mapper.toDomain
@@ -23,13 +22,10 @@ import javax.inject.Singleton
 class MovimientoRepositoryImpl @Inject constructor(
     private val movimientoApi: MovimientoApi,
     private val movimientoDao: MovimientoDao,
-    private val authDataStore: AuthDataStore,
     private val workspaceDataStore: WorkspaceDataStore
 ) : MovimientoRepository {
 
     override fun getMovimientos(filtroTipo: TipoMovimiento?): Flow<List<Movimiento>> = flow {
-        val token = authDataStore.token.first()
-            ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
         val wsId = workspaceDataStore.wsId.first()
@@ -47,7 +43,7 @@ class MovimientoRepositoryImpl @Inject constructor(
         emit(cached.map { it.toDomain() })
 
         try {
-            val response = movimientoApi.getMovimientos(token, orgSlug, wsSlug)
+            val response = movimientoApi.getMovimientos(orgSlug, wsSlug)
             val entities = response.movimientos.map { it.toEntity(wsId) }
             if (filtroTipo == null) {
                 movimientoDao.deleteAll()
@@ -72,7 +68,6 @@ class MovimientoRepositoryImpl @Inject constructor(
         cantidad: Int,
         notas: String?
     ): Result<Movimiento> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
         val wsId = workspaceDataStore.wsId.first()
@@ -84,7 +79,7 @@ class MovimientoRepositoryImpl @Inject constructor(
             notas = notas
         )
 
-        val response = movimientoApi.registrarMovimiento(token, orgSlug, wsSlug, request)
+        val response = movimientoApi.registrarMovimiento(orgSlug, wsSlug, request)
         val entity = response.toEntity(wsId)
         movimientoDao.insert(entity)
         response.toDomain()

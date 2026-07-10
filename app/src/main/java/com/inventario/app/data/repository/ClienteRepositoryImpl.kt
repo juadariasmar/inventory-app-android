@@ -1,6 +1,5 @@
 package com.inventario.app.data.repository
 
-import com.inventario.app.data.local.datastore.AuthDataStore
 import com.inventario.app.data.local.datastore.WorkspaceDataStore
 import com.inventario.app.data.mapper.toDomain
 import com.inventario.app.data.remote.api.ClienteApi
@@ -18,13 +17,10 @@ import javax.inject.Singleton
 @Singleton
 class ClienteRepositoryImpl @Inject constructor(
     private val clienteApi: ClienteApi,
-    private val authDataStore: AuthDataStore,
     private val workspaceDataStore: WorkspaceDataStore
 ) : ClienteRepository {
 
     override fun getClientes(): Flow<List<Cliente>> = flow {
-        val token = authDataStore.token.first()
-            ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
@@ -33,16 +29,15 @@ class ClienteRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val clientes = clienteApi.getClientes(token, orgSlug, wsSlug)
+        val clientes = clienteApi.getClientes(orgSlug, wsSlug)
         emit(clientes.map { it.toDomain() })
     }
 
     override suspend fun getClienteById(id: Int): Result<Cliente> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
-        clienteApi.getClienteById(token, orgSlug, wsSlug, id).toDomain()
+        clienteApi.getClienteById(orgSlug, wsSlug, id).toDomain()
     }.recoverCatching { throwable ->
         when (throwable) {
             is DomainError -> throw throwable
@@ -57,7 +52,6 @@ class ClienteRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createCliente(cliente: Cliente): Result<Cliente> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
@@ -70,7 +64,7 @@ class ClienteRepositoryImpl @Inject constructor(
             notas = cliente.notas
         )
 
-        clienteApi.createCliente(token, orgSlug, wsSlug, request).toDomain()
+        clienteApi.createCliente(orgSlug, wsSlug, request).toDomain()
     }.recoverCatching { throwable ->
         when (throwable) {
             is DomainError -> throw throwable
@@ -86,7 +80,6 @@ class ClienteRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateCliente(id: Int, cliente: Cliente): Result<Cliente> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
@@ -99,7 +92,7 @@ class ClienteRepositoryImpl @Inject constructor(
             notas = cliente.notas
         )
 
-        clienteApi.updateCliente(token, orgSlug, wsSlug, id, request).toDomain()
+        clienteApi.updateCliente(orgSlug, wsSlug, id, request).toDomain()
     }.recoverCatching { throwable ->
         when (throwable) {
             is DomainError -> throw throwable
