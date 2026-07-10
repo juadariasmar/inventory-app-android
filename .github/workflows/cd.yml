@@ -1,6 +1,9 @@
 name: Android CD
 
 on:
+
+permissions:
+  contents: write
   push:
     branches: [main]
 
