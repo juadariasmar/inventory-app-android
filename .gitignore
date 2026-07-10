@@ -26,3 +26,4 @@ app/release/
 *.json:Zone.Identifier
 # Firebase Admin SDK credentials
 inventory-app-android-firebase-adminsdk-fbsvc-*.json
+gradle.zip
