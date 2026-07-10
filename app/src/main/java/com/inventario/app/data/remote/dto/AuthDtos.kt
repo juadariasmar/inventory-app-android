@@ -40,6 +40,12 @@ data class ForgotPasswordRequest(
     val email: String
 )
 
+@Serializable
+data class SocialSignInRequest(
+    val provider: String,
+    val idToken: String
+)
+
 fun SignInResponse.toDomain(): Sesion? {
     val user = this.user ?: return null
     return Sesion(
@@ -51,6 +57,13 @@ fun SignInResponse.toDomain(): Sesion? {
         permisos = emptyList()
     )
 }
+
+@Serializable
+data class OnboardingResponse(
+    val ok: Boolean = false,
+    val orgSlug: String? = null,
+    val workspaceSlug: String? = null
+)
 
 @Serializable
 data class OrganizationDto(
