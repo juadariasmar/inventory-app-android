@@ -5,43 +5,16 @@ on:
     branches: [main]
 
 jobs:
-  build-and-distribute:
-    name: Build, test and distribute
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: echo "Workflow is running!"
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+      - run: java -version
       - uses: gradle/actions/setup-gradle@v4
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-      - name: Build release AAB
-        run: ./gradlew bundleRelease
-      - name: Upload to Firebase App Distribution
-        if: ${{ secrets.FIREBASE_APP_ID != '' && secrets.FIREBASE_CREDENTIALS != '' }}
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_CREDENTIALS }}
-          groups: beta-testers
-          file: app/build/outputs/apk/debug/app-debug.apk
-          releaseNotes: "Build ${{ github.run_number }} - ${{ github.event.head_commit.message }}"
-      - name: Upload AAB to Google Play
-        if: ${{ secrets.FIREBASE_CREDENTIALS != '' }}
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.FIREBASE_CREDENTIALS }}
-          packageName: com.inventario.app
-          releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: internal
-          status: completed
-          releaseName: Release ${{ github.run_number }}
+      - run: ./gradlew testDebugUnitTest
+      - run: ./gradlew assembleDebug
