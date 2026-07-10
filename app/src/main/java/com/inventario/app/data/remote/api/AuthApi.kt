@@ -1,15 +1,17 @@
 package com.inventario.app.data.remote.api
 
+import com.inventario.app.data.remote.dto.ForgotPasswordRequest
 import com.inventario.app.data.remote.dto.SignInRequest
 import com.inventario.app.data.remote.dto.SignInResponse
 import com.inventario.app.data.remote.dto.SessionResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,15 +27,27 @@ class AuthApi @Inject constructor(
         }.body()
     }
 
-    suspend fun getSession(token: String): SessionResponse {
-        return client.get("auth/get-session") {
-            header("Authorization", "Bearer $token")
-        }.body()
+    suspend fun getSession(): SessionResponse {
+        return client.get("auth/get-session").body()
     }
 
-    suspend fun signOut(token: String) {
-        client.post("auth/sign-out") {
-            header("Authorization", "Bearer $token")
+    suspend fun signOut() {
+        client.post("auth/sign-out")
+    }
+
+    suspend fun forgotPassword(email: String) {
+        client.post("auth/forget-password") {
+            contentType(ContentType.Application.Json)
+            setBody(ForgotPasswordRequest(email))
         }
+    }
+
+    suspend fun signInWithGoogle(idToken: String): SignInResponse {
+        return client.submitForm(
+            url = "auth/oauth2/callback/google",
+            formParameters = Parameters.build {
+                append("id_token", idToken)
+            }
+        ).body()
     }
 }

@@ -1,6 +1,5 @@
 package com.inventario.app.data.remote
 
-import com.inventario.app.data.remote.interceptor.AuthInterceptor
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -8,17 +7,35 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import okhttp3.Cookie
+import okhttp3.CookieJar
+import okhttp3.HttpUrl
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class KtorClientFactory(
-    private val authInterceptor: AuthInterceptor
-) {
+@Singleton
+class KtorClientFactory @Inject constructor() {
+
+    private val cookieStore = mutableMapOf<String, List<Cookie>>()
+
     fun create(): HttpClient {
         return HttpClient(OkHttp) {
+            engine {
+                config {
+                    cookieJar(object : CookieJar {
+                        override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
+                            cookieStore[url.host] = cookies
+                        }
+
+                        override fun loadForRequest(url: HttpUrl): List<Cookie> {
+                            return cookieStore[url.host] ?: emptyList()
+                        }
+                    })
+                }
+            }
+
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true
@@ -38,10 +55,6 @@ class KtorClientFactory(
 
             defaultRequest {
                 url("https://inventory-project-ten.vercel.app/api/")
-                val token = runBlocking { authInterceptor.getToken() }
-                if (token != null) {
-                    header(HttpHeaders.Authorization, "Bearer $token")
-                }
             }
         }
     }

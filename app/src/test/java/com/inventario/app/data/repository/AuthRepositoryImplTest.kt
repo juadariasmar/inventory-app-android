@@ -2,6 +2,7 @@ package com.inventario.app.data.repository
 
 import com.google.common.truth.Truth.assertThat
 import com.inventario.app.data.local.datastore.AuthDataStore
+import com.inventario.app.data.remote.KtorClientFactory
 import com.inventario.app.data.remote.api.AuthApi
 import com.inventario.app.data.remote.dto.SessionResponse
 import com.inventario.app.data.remote.dto.SignInResponse
@@ -21,12 +22,14 @@ import org.junit.Test
 class AuthRepositoryImplTest {
 
     private val authApi = mockk<AuthApi>()
-    private val authDataStore = mockk<AuthDataStore>()
+    private val authDataStore = mockk<AuthDataStore>(relaxed = true)
+    private val ktorClientFactory = mockk<KtorClientFactory>(relaxed = true)
     private lateinit var repository: AuthRepositoryImpl
 
     @Before
     fun setup() {
-        repository = AuthRepositoryImpl(authApi, authDataStore)
+        coEvery { authDataStore.getToken() } returns null
+        repository = AuthRepositoryImpl(authApi, authDataStore, ktorClientFactory)
     }
 
     // --- login ---
