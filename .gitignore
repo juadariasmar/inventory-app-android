@@ -1,0 +1,25 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.apk
+*.aab
+*.apks
+*.hprof
+
+# App build output
+app/build/
+app/release/
+
+# Keystore (do not commit)
+*.keystore
+*.jks
+
+# Firebase (replace with your real google-services.json from Firebase Console)
+# google-services.json is committed with placeholder - replace with real one
