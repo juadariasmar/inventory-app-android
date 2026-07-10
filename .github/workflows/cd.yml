@@ -29,7 +29,7 @@ jobs:
         env:
           HAS_FIREBASE: ${{ secrets.FIREBASE_APP_ID != '' }}
         if: env.HAS_FIREBASE != ''
-        uses: wzieba/Firebase-Distribution-Github-Action@v1.7.1
+        uses: wzieba/firebase-distribution-github-action@v1.7.1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_CREDENTIALS }}
