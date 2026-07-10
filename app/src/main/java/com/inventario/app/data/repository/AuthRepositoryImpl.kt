@@ -21,11 +21,10 @@ class AuthRepositoryImpl @Inject constructor(
 
 override suspend fun login(email: String, password: String): Result<Sesion> = runCatching {
         val response = authApi.signIn(email, password)
-        val token = response.token ?: throw DomainError.NetworkError
         val sesion = response.toDomain() ?: throw DomainError.Unauthorized
 
         authDataStore.saveSession(
-            token = token,
+            token = "",
             userId = sesion.userId,
             email = sesion.email,
             name = sesion.nombre,
@@ -79,11 +78,10 @@ override suspend fun login(email: String, password: String): Result<Sesion> = ru
 
     override suspend fun signInWithGoogle(idToken: String): Result<Sesion> = runCatching {
         val response = authApi.signInWithGoogle(idToken)
-        val token = response.token ?: throw DomainError.NetworkError
         val sesion = response.toDomain() ?: throw DomainError.Unauthorized
 
         authDataStore.saveSession(
-            token = token,
+            token = "",
             userId = sesion.userId,
             email = sesion.email,
             name = sesion.nombre,

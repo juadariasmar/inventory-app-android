@@ -11,9 +11,8 @@ data class SignInRequest(
 
 @Serializable
 data class SignInResponse(
-    val redirect: Boolean = false,
-    val token: String? = null,
-    val user: UserDto? = null
+    val user: UserDto? = null,
+    val session: SessionDto? = null
 )
 
 @Serializable
