@@ -6,10 +6,12 @@ import com.inventario.app.data.remote.dto.SignInResponse
 import com.inventario.app.data.remote.dto.SessionResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -38,5 +40,14 @@ class AuthApi @Inject constructor(
             contentType(ContentType.Application.Json)
             setBody(ForgotPasswordRequest(email))
         }
+    }
+
+    suspend fun signInWithGoogle(idToken: String): SignInResponse {
+        return client.submitForm(
+            url = "auth/oauth2/callback/google",
+            formParameters = Parameters.build {
+                append("id_token", idToken)
+            }
+        ).body()
     }
 }

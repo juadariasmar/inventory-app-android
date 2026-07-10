@@ -76,6 +76,33 @@ class AuthRepositoryImpl @Inject constructor(
         authApi.forgotPassword(email)
     }
 
+    override suspend fun signInWithGoogle(idToken: String): Result<Sesion> = runCatching {
+        val response = authApi.signInWithGoogle(idToken)
+        val token = response.token ?: throw DomainError.NetworkError
+        val sesion = response.toDomain() ?: throw DomainError.Unauthorized
+
+        authDataStore.saveSession(
+            token = token,
+            userId = sesion.userId,
+            email = sesion.email,
+            name = sesion.nombre,
+            rol = sesion.rol
+        )
+
+        sesion
+    }.recoverCatching { throwable ->
+        when (throwable) {
+            is DomainError -> throw throwable
+            is io.ktor.client.plugins.ResponseException -> {
+                when (throwable.response.status.value) {
+                    401 -> throw DomainError.Unauthorized
+                    else -> throw DomainError.NetworkError
+                }
+            }
+            else -> throw DomainError.NetworkError
+        }
+    }
+
     override suspend fun logout() {
         try {
             authApi.signOut()
