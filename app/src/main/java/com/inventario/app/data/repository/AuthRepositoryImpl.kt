@@ -2,7 +2,7 @@ package com.inventario.app.data.repository
 
 import com.inventario.app.data.local.datastore.AuthDataStore
 import com.inventario.app.data.mapper.toDomain
-import com.inventario.app.data.remote.KtorClientFactory
+
 import com.inventario.app.data.remote.api.AuthApi
 import com.inventario.app.domain.error.DomainError
 import com.inventario.app.domain.model.Sesion
@@ -10,29 +10,20 @@ import com.inventario.app.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
-    private val authDataStore: AuthDataStore,
-    private val ktorClientFactory: KtorClientFactory
+    private val authDataStore: AuthDataStore
 ) : AuthRepository {
 
-    init {
-        runBlocking {
-            ktorClientFactory.authToken = authDataStore.getToken()
-        }
-    }
-
-    override suspend fun login(email: String, password: String): Result<Sesion> = runCatching {
+override suspend fun login(email: String, password: String): Result<Sesion> = runCatching {
         val response = authApi.signIn(email, password)
         val token = response.token ?: throw DomainError.NetworkError
         val sesion = response.toDomain() ?: throw DomainError.Unauthorized
 
-        ktorClientFactory.authToken = token
         authDataStore.saveSession(
             token = token,
             userId = sesion.userId,
@@ -118,7 +109,6 @@ class AuthRepositoryImpl @Inject constructor(
             authApi.signOut()
         } catch (_: Exception) {
         } finally {
-            ktorClientFactory.authToken = null
             authDataStore.clearSession()
         }
     }
