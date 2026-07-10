@@ -11,7 +11,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -26,7 +25,6 @@ class AuthRepositoryImplTest {
 
     @Before
     fun setup() {
-        coEvery { authDataStore.getToken() } returns null
         repository = AuthRepositoryImpl(authApi, authDataStore)
     }
 
@@ -35,8 +33,6 @@ class AuthRepositoryImplTest {
     @Test
     fun `login returns success on valid credentials`() = runTest {
         val signInResponse = SignInResponse(
-            redirect = false,
-            token = "test-token-123",
             user = UserDto(id = "1", email = "test@email.com", name = "Test", rol = "USUARIO")
         )
         coEvery { authApi.signIn(any(), any()) } returns signInResponse
@@ -55,8 +51,6 @@ class AuthRepositoryImplTest {
     @Test
     fun `login saves session to data store`() = runTest {
         val signInResponse = SignInResponse(
-            redirect = false,
-            token = "test-token-123",
             user = UserDto(id = "1", email = "test@email.com", name = "Test", rol = "ADMIN")
         )
         coEvery { authApi.signIn(any(), any()) } returns signInResponse
@@ -66,7 +60,7 @@ class AuthRepositoryImplTest {
 
         coVerify {
             authDataStore.saveSession(
-                token = "test-token-123",
+                token = "",
                 userId = "1",
                 email = "test@email.com",
                 name = "Test",
@@ -76,19 +70,8 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login returns failure when token is null`() = runTest {
-        val signInResponse = SignInResponse(redirect = false, token = null, user = null)
-        coEvery { authApi.signIn(any(), any()) } returns signInResponse
-
-        val result = repository.login("test@email.com", "password")
-
-        assertThat(result.isFailure).isTrue()
-        assertThat(result.exceptionOrNull()).isInstanceOf(DomainError.NetworkError::class.java)
-    }
-
-    @Test
     fun `login returns failure when user is null`() = runTest {
-        val signInResponse = SignInResponse(redirect = false, token = "token", user = null)
+        val signInResponse = SignInResponse(user = null)
         coEvery { authApi.signIn(any(), any()) } returns signInResponse
 
         val result = repository.login("test@email.com", "password")
@@ -100,8 +83,6 @@ class AuthRepositoryImplTest {
     @Test
     fun `login maps user name fallback to email when name is null`() = runTest {
         val signInResponse = SignInResponse(
-            redirect = false,
-            token = "token",
             user = UserDto(id = "1", email = "test@email.com", name = null, rol = "USUARIO")
         )
         coEvery { authApi.signIn(any(), any()) } returns signInResponse
@@ -116,8 +97,6 @@ class AuthRepositoryImplTest {
     @Test
     fun `login maps rol fallback to USUARIO when rol is null`() = runTest {
         val signInResponse = SignInResponse(
-            redirect = false,
-            token = "token",
             user = UserDto(id = "1", email = "test@email.com", name = "Test", rol = null)
         )
         coEvery { authApi.signIn(any(), any()) } returns signInResponse
@@ -146,16 +125,6 @@ class AuthRepositoryImplTest {
         repository.login("test@email.com", "password")
 
         coVerify(exactly = 0) { authDataStore.saveSession(any(), any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `login with redirect response returns NetworkError`() = runTest {
-        val signInResponse = SignInResponse(redirect = true, token = null, user = null)
-        coEvery { authApi.signIn(any(), any()) } returns signInResponse
-
-        val result = repository.login("test@email.com", "password")
-
-        assertThat(result.isFailure).isTrue()
     }
 
     // --- getSession ---

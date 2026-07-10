@@ -1,6 +1,5 @@
 package com.inventario.app.data.repository
 
-import com.inventario.app.data.local.datastore.AuthDataStore
 import com.inventario.app.data.local.datastore.WorkspaceDataStore
 import com.inventario.app.data.mapper.toDomain
 import com.inventario.app.data.remote.api.VentaApi
@@ -19,13 +18,10 @@ import javax.inject.Singleton
 @Singleton
 class VentaRepositoryImpl @Inject constructor(
     private val ventaApi: VentaApi,
-    private val authDataStore: AuthDataStore,
     private val workspaceDataStore: WorkspaceDataStore
 ) : VentaRepository {
 
     override fun getVentas(): Flow<List<Venta>> = flow {
-        val token = authDataStore.token.first()
-            ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
@@ -34,16 +30,15 @@ class VentaRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val ventas = ventaApi.getVentas(token, orgSlug, wsSlug)
+        val ventas = ventaApi.getVentas(orgSlug, wsSlug)
         emit(ventas.map { it.toDomain() })
     }
 
     override suspend fun getVentaById(id: Int): Result<Venta> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
-        val ventas = ventaApi.getVentas(token, orgSlug, wsSlug)
+        val ventas = ventaApi.getVentas(orgSlug, wsSlug)
         ventas.firstOrNull { it.id == id }?.toDomain()
             ?: throw DomainError.NotFound("Venta no encontrada")
     }.recoverCatching { throwable ->
@@ -58,7 +53,6 @@ class VentaRepositoryImpl @Inject constructor(
         items: List<Pair<Int, Int>>,
         notas: String?
     ): Result<Venta> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
@@ -70,7 +64,7 @@ class VentaRepositoryImpl @Inject constructor(
             notas = notas
         )
 
-        val response = ventaApi.createVenta(token, orgSlug, wsSlug, request)
+        val response = ventaApi.createVenta(orgSlug, wsSlug, request)
         response.toDomain()
     }.recoverCatching { throwable ->
         when (throwable) {
@@ -87,11 +81,10 @@ class VentaRepositoryImpl @Inject constructor(
     }
 
     override suspend fun cancelarVenta(id: Int, motivo: String): Result<Unit> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
-        ventaApi.cancelarVenta(token, orgSlug, wsSlug, id, CancelarVentaRequest(motivo))
+        ventaApi.cancelarVenta(orgSlug, wsSlug, id, CancelarVentaRequest(motivo))
         Unit
     }.recoverCatching { throwable ->
         when (throwable) {

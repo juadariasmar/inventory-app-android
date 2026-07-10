@@ -1,10 +1,8 @@
 package com.inventario.app.data.repository
 
-import com.inventario.app.data.local.datastore.AuthDataStore
 import com.inventario.app.data.local.datastore.WorkspaceDataStore
 import com.inventario.app.data.mapper.toDomain
 import com.inventario.app.data.remote.api.DashboardApi
-import com.inventario.app.domain.error.DomainError
 import com.inventario.app.domain.model.DashboardMetrics
 import com.inventario.app.domain.repository.DashboardRepository
 import kotlinx.coroutines.flow.Flow
@@ -16,13 +14,10 @@ import javax.inject.Singleton
 @Singleton
 class DashboardRepositoryImpl @Inject constructor(
     private val dashboardApi: DashboardApi,
-    private val authDataStore: AuthDataStore,
     private val workspaceDataStore: WorkspaceDataStore
 ) : DashboardRepository {
 
     override fun getDashboardMetrics(): Flow<DashboardMetrics> = flow {
-        val token = authDataStore.token.first()
-            ?: throw DomainError.Unauthorized
         val orgSlug = workspaceDataStore.orgSlug.first()
         val wsSlug = workspaceDataStore.wsSlug.first()
 
@@ -39,7 +34,7 @@ class DashboardRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val response = dashboardApi.getDashboardMetrics(token, orgSlug, wsSlug)
+        val response = dashboardApi.getDashboardMetrics(orgSlug, wsSlug)
         emit(response.toDomain())
     }
 }
