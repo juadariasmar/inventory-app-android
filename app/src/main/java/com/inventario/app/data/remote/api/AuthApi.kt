@@ -1,5 +1,6 @@
 package com.inventario.app.data.remote.api
 
+import com.inventario.app.data.remote.dto.ForgotPasswordRequest
 import com.inventario.app.data.remote.dto.SignInRequest
 import com.inventario.app.data.remote.dto.SignInResponse
 import com.inventario.app.data.remote.dto.SessionResponse
@@ -30,5 +31,12 @@ class AuthApi @Inject constructor(
 
     suspend fun signOut() {
         client.post("auth/sign-out")
+    }
+
+    suspend fun forgotPassword(email: String) {
+        client.post("auth/forget-password") {
+            contentType(ContentType.Application.Json)
+            setBody(ForgotPasswordRequest(email))
+        }
     }
 }

@@ -1,6 +1,6 @@
 package com.inventario.app.data.remote.dto
 
-import kotlinx.serialization.SerialName
+import com.inventario.app.domain.model.Sesion
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -21,7 +21,6 @@ data class UserDto(
     val id: String,
     val email: String,
     val name: String? = null,
-    @SerialName("rol")
     val rol: String? = null
 )
 
@@ -33,31 +32,42 @@ data class SessionResponse(
 
 @Serializable
 data class SessionDto(
-    val id: String? = null,
-    val userId: String? = null,
+    val userId: String,
     val expiresAt: String? = null
 )
 
 @Serializable
-data class UserWithOrgsResponse(
-    val user: UserDto? = null,
-    val organizations: List<OrganizationMembershipDto> = emptyList()
+data class ForgotPasswordRequest(
+    val email: String
 )
 
-@Serializable
-data class OrganizationMembershipDto(
-    val id: String,
-    val role: String,
-    val organizationId: String,
-    val organization: OrganizationDto? = null
-)
+fun SignInResponse.toDomain(): Sesion? {
+    val user = this.user ?: return null
+    return Sesion(
+        userId = user.id,
+        email = user.email,
+        nombre = user.name ?: user.email,
+        rol = user.rol ?: "USUARIO",
+        estado = "ACTIVO",
+        permisos = emptyList()
+    )
+}
 
 @Serializable
 data class OrganizationDto(
     val id: String,
     val nombre: String,
     val slug: String,
-    @SerialName("planStatus")
-    val planStatus: String? = null,
-    val workspaces: List<WorkspaceDto>? = null
+    val planStatus: String? = null
+)
+
+@Serializable
+data class UserWithOrgsResponse(
+    val organizations: List<OrgMembershipDto> = emptyList()
+)
+
+@Serializable
+data class OrgMembershipDto(
+    val organization: OrganizationDto? = null,
+    val role: String? = null
 )

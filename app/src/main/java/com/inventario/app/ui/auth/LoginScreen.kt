@@ -14,6 +14,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -55,6 +61,8 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
+    var showForgotDialog by remember { mutableStateOf(false) }
+    var forgotEmail by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
@@ -196,7 +204,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             TextButton(
-                onClick = { /* TODO: Forgot password */ },
+                onClick = { showForgotDialog = true; forgotEmail = uiState.email },
                 modifier = Modifier.semantics { contentDescription = "¿Olvidaste tu contraseña?" }
             ) {
                 Text(
@@ -205,6 +213,36 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+
+        if (showForgotDialog) {
+            AlertDialog(
+                onDismissRequest = { showForgotDialog = false },
+                title = { Text("Recuperar contraseña") },
+                text = {
+                    Column {
+                        Text("Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.")
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = forgotEmail,
+                            onValueChange = { forgotEmail = it },
+                            label = { Text("Email") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.onForgotPassword(forgotEmail)
+                        showForgotDialog = false
+                    }) { Text("Enviar") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showForgotDialog = false }) { Text("Cancelar") }
+                }
+            )
         }
 
         LoadingOverlay(isLoading = uiState.isLoading)

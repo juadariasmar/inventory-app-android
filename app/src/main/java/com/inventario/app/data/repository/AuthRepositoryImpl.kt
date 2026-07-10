@@ -72,6 +72,10 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun forgotPassword(email: String): Result<Unit> = runCatching {
+        authApi.forgotPassword(email)
+    }
+
     override suspend fun logout() {
         try {
             authApi.signOut()

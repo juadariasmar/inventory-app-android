@@ -2,6 +2,7 @@ package com.inventario.app.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventario.app.domain.usecase.auth.ForgotPasswordUseCase
 import com.inventario.app.domain.usecase.auth.GetSessionUseCase
 import com.inventario.app.domain.usecase.auth.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val getSessionUseCase: GetSessionUseCase
+    private val getSessionUseCase: GetSessionUseCase,
+    private val forgotPasswordUseCase: ForgotPasswordUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -73,5 +75,13 @@ class LoginViewModel @Inject constructor(
 
     fun onDismissError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun onForgotPassword(email: String) {
+        viewModelScope.launch {
+            forgotPasswordUseCase(email)
+                .onSuccess { _uiState.update { it.copy(error = null) } }
+                .onFailure { error -> _uiState.update { it.copy(error = error.message) } }
+        }
     }
 }
