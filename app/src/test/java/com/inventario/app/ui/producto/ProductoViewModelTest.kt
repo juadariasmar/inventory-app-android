@@ -5,7 +5,7 @@ import com.inventario.app.core.util.MainDispatcherRule
 import com.inventario.app.domain.model.Producto
 import com.inventario.app.domain.usecase.categoria.GetCategoriasUseCase
 import com.inventario.app.domain.usecase.producto.DeleteProductoUseCase
-import com.inventario.app.domain.usecase.producto.GetProductosUseCase
+import com.inventario.app.domain.usecase.producto.GetProductosListUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
@@ -19,7 +19,7 @@ class ProductoViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val getProductos = mockk<GetProductosUseCase>()
+    private val getProductos = mockk<GetProductosListUseCase>()
     private val getCategorias = mockk<GetCategoriasUseCase>()
     private val deleteProducto = mockk<DeleteProductoUseCase>()
     private lateinit var viewModel: ProductoViewModel

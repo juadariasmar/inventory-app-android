@@ -8,7 +8,7 @@ import com.inventario.app.domain.model.Movimiento
 import com.inventario.app.domain.model.Producto
 import com.inventario.app.domain.model.TipoMovimiento
 import com.inventario.app.domain.usecase.movimiento.RegistrarMovimientoUseCase
-import com.inventario.app.domain.usecase.producto.GetProductosUseCase
+import com.inventario.app.domain.usecase.producto.GetProductosListUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -23,7 +23,7 @@ class MovimientoFormViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val getProductos = mockk<GetProductosUseCase>()
+    private val getProductos = mockk<GetProductosListUseCase>()
     private val registrarMovimiento = mockk<RegistrarMovimientoUseCase>()
     private val savedStateHandle = mockk<SavedStateHandle>()
 

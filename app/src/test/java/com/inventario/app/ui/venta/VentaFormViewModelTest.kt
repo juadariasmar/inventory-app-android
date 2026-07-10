@@ -6,7 +6,7 @@ import com.inventario.app.core.util.MainDispatcherRule
 import com.inventario.app.domain.model.Cliente
 import com.inventario.app.domain.model.Producto
 import com.inventario.app.domain.usecase.cliente.GetClientesUseCase
-import com.inventario.app.domain.usecase.producto.GetProductosUseCase
+import com.inventario.app.domain.usecase.producto.GetProductosListUseCase
 import com.inventario.app.domain.usecase.venta.CreateVentaUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,7 +23,7 @@ class VentaFormViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val getClientes = mockk<GetClientesUseCase>()
-    private val getProductos = mockk<GetProductosUseCase>()
+    private val getProductos = mockk<GetProductosListUseCase>()
     private val createVenta = mockk<CreateVentaUseCase>()
     private lateinit var viewModel: VentaFormViewModel
 
