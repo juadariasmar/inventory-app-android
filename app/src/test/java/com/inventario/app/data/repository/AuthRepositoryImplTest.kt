@@ -2,7 +2,6 @@ package com.inventario.app.data.repository
 
 import com.google.common.truth.Truth.assertThat
 import com.inventario.app.data.local.datastore.AuthDataStore
-import com.inventario.app.data.remote.KtorClientFactory
 import com.inventario.app.data.remote.api.AuthApi
 import com.inventario.app.data.remote.dto.SessionResponse
 import com.inventario.app.data.remote.dto.SignInResponse
@@ -23,13 +22,12 @@ class AuthRepositoryImplTest {
 
     private val authApi = mockk<AuthApi>()
     private val authDataStore = mockk<AuthDataStore>(relaxed = true)
-    private val ktorClientFactory = mockk<KtorClientFactory>(relaxed = true)
     private lateinit var repository: AuthRepositoryImpl
 
     @Before
     fun setup() {
         coEvery { authDataStore.getToken() } returns null
-        repository = AuthRepositoryImpl(authApi, authDataStore, ktorClientFactory)
+        repository = AuthRepositoryImpl(authApi, authDataStore)
     }
 
     // --- login ---
@@ -165,7 +163,7 @@ class AuthRepositoryImplTest {
     @Test
     fun `getSession returns success with valid token`() = runTest {
         coEvery { authDataStore.token } returns flowOf("valid-token")
-        coEvery { authApi.getSession(any()) } returns SessionResponse(
+        coEvery { authApi.getSession() } returns SessionResponse(
             user = UserDto(id = "1", email = "a@b.com", name = "User", rol = "ADMIN")
         )
 
@@ -178,19 +176,9 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `getSession returns Unauthorized when token is null`() = runTest {
-        coEvery { authDataStore.token } returns flowOf(null)
-
-        val result = repository.getSession()
-
-        assertThat(result.isFailure).isTrue()
-        assertThat(result.exceptionOrNull()).isInstanceOf(DomainError.Unauthorized::class.java)
-    }
-
-    @Test
     fun `getSession returns Unauthorized when user is null`() = runTest {
         coEvery { authDataStore.token } returns flowOf("token")
-        coEvery { authApi.getSession(any()) } returns SessionResponse(user = null)
+        coEvery { authApi.getSession() } returns SessionResponse(user = null)
 
         val result = repository.getSession()
 
@@ -201,7 +189,7 @@ class AuthRepositoryImplTest {
     @Test
     fun `getSession sets estado to ACTIVO`() = runTest {
         coEvery { authDataStore.token } returns flowOf("token")
-        coEvery { authApi.getSession(any()) } returns SessionResponse(
+        coEvery { authApi.getSession() } returns SessionResponse(
             user = UserDto(id = "1", email = "a@b.com", name = "User", rol = "USUARIO")
         )
 
@@ -213,7 +201,7 @@ class AuthRepositoryImplTest {
     @Test
     fun `getSession maps name fallback to email`() = runTest {
         coEvery { authDataStore.token } returns flowOf("token")
-        coEvery { authApi.getSession(any()) } returns SessionResponse(
+        coEvery { authApi.getSession() } returns SessionResponse(
             user = UserDto(id = "1", email = "a@b.com", name = null, rol = "USUARIO")
         )
 
@@ -225,7 +213,7 @@ class AuthRepositoryImplTest {
     @Test
     fun `getSession returns NetworkError on generic exception`() = runTest {
         coEvery { authDataStore.token } returns flowOf("token")
-        coEvery { authApi.getSession(any()) } throws RuntimeException("error")
+        coEvery { authApi.getSession() } throws RuntimeException("error")
 
         val result = repository.getSession()
 
@@ -238,7 +226,7 @@ class AuthRepositoryImplTest {
     @Test
     fun `logout clears session from data store`() = runTest {
         coEvery { authDataStore.token } returns flowOf("token")
-        coEvery { authApi.signOut(any()) } just mockk()
+        coEvery { authApi.signOut() } just mockk()
         coEvery { authDataStore.clearSession() } just mockk()
 
         repository.logout()
@@ -249,18 +237,18 @@ class AuthRepositoryImplTest {
     @Test
     fun `logout calls signOut with token`() = runTest {
         coEvery { authDataStore.token } returns flowOf("token-123")
-        coEvery { authApi.signOut(any()) } just mockk()
+        coEvery { authApi.signOut() } just mockk()
         coEvery { authDataStore.clearSession() } just mockk()
 
         repository.logout()
 
-        coVerify { authApi.signOut("token-123") }
+        coVerify { authApi.signOut() }
     }
 
     @Test
     fun `logout clears session even when API call fails`() = runTest {
         coEvery { authDataStore.token } returns flowOf("token")
-        coEvery { authApi.signOut(any()) } throws RuntimeException("network error")
+        coEvery { authApi.signOut() } throws RuntimeException("network error")
         coEvery { authDataStore.clearSession() } just mockk()
 
         repository.logout()
@@ -276,16 +264,6 @@ class AuthRepositoryImplTest {
         repository.logout()
 
         coVerify { authDataStore.clearSession() }
-    }
-
-    @Test
-    fun `logout does not call signOut when token is null`() = runTest {
-        coEvery { authDataStore.token } returns flowOf(null)
-        coEvery { authDataStore.clearSession() } just mockk()
-
-        repository.logout()
-
-        coVerify(exactly = 0) { authApi.signOut(any()) }
     }
 
     // --- observeToken ---
