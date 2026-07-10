@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "YOUR_PROJECT_ID",
-    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+    "project_number": "555660820876",
+    "project_id": "inventory-app-android",
+    "storage_bucket": "inventory-app-android.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "YOUR_APP_ID",
+        "mobilesdk_app_id": "1:555660820876:android:751d6688c74ca4d24996a9",
         "android_client_info": {
           "package_name": "com.inventario.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_API_KEY"
+          "current_key": "AIzaSyD6h3PG1dyGlC7z0ijJ31_UAODGbenLq9M"
         }
       ],
       "services": {
