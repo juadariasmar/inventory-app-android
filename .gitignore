@@ -27,3 +27,6 @@ app/release/
 # Firebase Admin SDK credentials
 inventory-app-android-firebase-adminsdk-fbsvc-*.json
 gradle.zip
+# AI agent config (not versioned)
+AGENTS.md
+run.json
