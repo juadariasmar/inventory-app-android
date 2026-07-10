@@ -1,11 +1,11 @@
 name: Android CD
 
 on:
+  push:
+    branches: [main]
 
 permissions:
   contents: write
-  push:
-    branches: [main]
 
 jobs:
   build:
@@ -52,10 +52,10 @@ jobs:
           body: |
             ## Build ${{ github.run_number }}
             **Commit:** ${{ github.sha }}
-            
+
             ### Cambios
             ${{ github.event.head_commit.message }}
-            
+
             ### Descargas
             - [APK Debug](app-debug.apk) — desarrollo
             - [APK Release](app-release-unsigned.apk) — produccion (sin firmar)
