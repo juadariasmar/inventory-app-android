@@ -15,7 +15,7 @@
 1. Push feature branch to origin
 2. Open PR from feature branch → `main`
 3. CI passes (tests + build) → merge → CD pipeline auto-deploys
-4. CD: Build release APK → Firebase App Distribution (beta testers)
+4. CD: Build release APK → Firebase App Distribution (beta) + GitHub Release (APK descargable)
 
 **NEVER** run `gradlew assembleRelease` without testing first.
 
