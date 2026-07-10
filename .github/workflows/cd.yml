@@ -19,24 +19,15 @@ jobs:
         run: ./gradlew testDebugUnitTest
       - name: Build debug APK
         run: ./gradlew assembleDebug
+      - name: Build release APK
+        run: ./gradlew assembleRelease
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
-      - name: Build release APK
-        run: ./gradlew assembleRelease
       - name: Upload release APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: app-release
           path: app/build/outputs/apk/release/app-release-unsigned.apk
-      - name: Upload to Firebase App Distribution
-        if: secrets.FIREBASE_APP_ID != '' && secrets.FIREBASE_CREDENTIALS != ''
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_CREDENTIALS }}
-          groups: beta-testers
-          file: app/build/outputs/apk/debug/app-debug.apk
-          releaseNotes: "Build ${{ github.run_number }}"
