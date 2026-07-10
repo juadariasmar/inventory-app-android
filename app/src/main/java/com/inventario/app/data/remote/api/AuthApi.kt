@@ -6,7 +6,6 @@ import com.inventario.app.data.remote.dto.SessionResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -25,15 +24,11 @@ class AuthApi @Inject constructor(
         }.body()
     }
 
-    suspend fun getSession(token: String): SessionResponse {
-        return client.get("auth/get-session") {
-            header("Authorization", "Bearer $token")
-        }.body()
+    suspend fun getSession(): SessionResponse {
+        return client.get("auth/get-session").body()
     }
 
-    suspend fun signOut(token: String) {
-        client.post("auth/sign-out") {
-            header("Authorization", "Bearer $token")
-        }
+    suspend fun signOut() {
+        client.post("auth/sign-out")
     }
 }

@@ -48,8 +48,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getSession(): Result<Sesion> = runCatching {
-        val token = authDataStore.token.first() ?: throw DomainError.Unauthorized
-        val response = authApi.getSession(token)
+        val response = authApi.getSession()
         val user = response.user ?: throw DomainError.Unauthorized
 
         Sesion(
@@ -75,10 +74,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun logout() {
         try {
-            val token = authDataStore.token.first()
-            if (token != null) {
-                authApi.signOut(token)
-            }
+            authApi.signOut()
         } catch (_: Exception) {
         } finally {
             authDataStore.clearSession()
